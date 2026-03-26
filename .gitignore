@@ -4,3 +4,5 @@ __pycache__/
 # Generated training artifacts
 metrics.txt
 plot.png
+metrics.json
+report.md

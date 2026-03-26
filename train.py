@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 from pathlib import Path
+import json
 
 # -------------------------
 # Parse CLI arguments
@@ -33,7 +34,8 @@ X_test = np.genfromtxt(str(test_features_path))
 y_test = np.genfromtxt(str(test_labels_path)).ravel().astype(int)
 
 # Fit a model
-clf = RandomForestClassifier(max_depth=depth, random_state=30)
+random_state = 30
+clf = RandomForestClassifier(max_depth=depth, random_state=random_state)
 clf.fit(X_train, y_train)
 
 acc = clf.score(X_test, y_test)
@@ -41,6 +43,14 @@ print(acc)
 with open("metrics.txt", "w", encoding="utf-8") as outfile:
     outfile.write("Depth: " + str(depth) + "\n")
     outfile.write("Accuracy: " + str(acc) + "\n")
+
+with open("metrics.json", "w", encoding="utf-8") as outfile:
+    json.dump(
+        {"accuracy": float(acc), "depth": int(depth), "random_state": int(random_state)},
+        outfile,
+        indent=2,
+    )
+    outfile.write("\n")
 
 # Plot it
 disp = ConfusionMatrixDisplay.from_estimator(
