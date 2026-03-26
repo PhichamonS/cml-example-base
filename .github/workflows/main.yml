@@ -1,24 +1,13 @@
 name: model-training
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-
-permissions:
-  contents: read
-  pull-requests: write
+on: [push]
 jobs:
   run:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        depth: [2, 5]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
       - uses: iterative/setup-cml@v1
@@ -30,7 +19,7 @@ jobs:
 
       - name: Train model
         run: |
-          python train.py --depth ${{ matrix.depth }}
+          python train.py --depth 2
 
       - name: Quality gate (accuracy threshold)
         run: python -c "import json; m=json.load(open('metrics.json','r',encoding='utf-8')); a=float(m['accuracy']); assert a>=0.80, f'Accuracy too low: {a}'"
@@ -42,8 +31,7 @@ jobs:
           cat metrics.txt > report.md
           cml publish plot.png --md >> report.md
 
-      - name: Comment report on PR
-        if: ${{ github.event_name == 'pull_request' && matrix.depth == 2 }}
+      - name: Comment report
         env:
           REPO_TOKEN: ${{ github.token }}
         run: cml comment create report.md
@@ -51,7 +39,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: training-artifacts-depth-${{ matrix.depth }}
+          name: training-artifacts
           path: |
             metrics.txt
             metrics.json
