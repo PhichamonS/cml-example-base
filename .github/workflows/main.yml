@@ -27,8 +27,6 @@ jobs:
         run: python get_data.py
 
       - name: Train model
-        env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python train.py --depth ${{ matrix.depth }}
 
@@ -36,6 +34,8 @@ jobs:
         run: python -c "import json; m=json.load(open('metrics.json','r',encoding='utf-8')); a=float(m['accuracy']); assert a>=0.80, f'Accuracy too low: {a}'"
 
       - name: Build report
+        env:
+          REPO_TOKEN: ${{ github.token }}
         run: |
           cat metrics.txt > report.md
           cml publish plot.png --md >> report.md
@@ -43,7 +43,7 @@ jobs:
       - name: Comment report on PR
         if: ${{ github.event_name == 'pull_request' && matrix.depth == 2 }}
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ github.token }}
         run: cml comment create report.md
 
       - name: Upload artifacts
